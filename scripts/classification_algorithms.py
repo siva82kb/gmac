@@ -9,7 +9,7 @@ import seaborn as sns
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_predict, cross_val_score, train_test_split, PredefinedSplit, GridSearchCV
-from sklearn.neighbors.kde import KernelDensity
+from sklearn.neighbors._kde import KernelDensity
 from scipy import stats
 from sklearn.neural_network import MLPClassifier
 from tqdm import tqdm
