@@ -19,10 +19,13 @@ import sys
 def get_continuous_segments(df):
     # returns a list of continuous sections (as dataframes) from the original dataframe
 
-    time_diff = np.array([pd.Timedelta(diff).total_seconds() for diff in np.diff(df.index.values)])
+    time_diff = np.array([pd.Timedelta(diff).total_seconds()
+                          for diff in np.diff(df.index.values)])
     inx = np.sort(np.append(np.where(time_diff > 60)[0], -1))
-    dfs = [df.iloc[inx[i] + 1:inx[i + 1] + 1] if i + 1 < len(inx) else df.iloc[inx[-1] + 1:] for i in
-           np.arange(len(inx))]
+    dfs = [df.iloc[inx[i] + 1:inx[i + 1] + 1]
+           if i + 1 < len(inx)
+           else df.iloc[inx[-1] + 1:]
+           for i in np.arange(len(inx))]
     return dfs
 
 
@@ -68,7 +71,8 @@ def bandpass(x, fs=50, order=4):
 
 def resample(df, current_fs, new_fs):
     dfs = get_continuous_segments(df)
-    dfs = [df.resample(str(round(1 / new_fs, 2)) + 'S', label='right', closed='right').mean() for df in dfs]
+    dfs = [df.resample(str(round(1 / new_fs, 2)) + 'S', label='right', closed='right').mean()
+           for df in dfs]
     df = pd.concat(dfs)
     df.index.name = 'time'
     return df
@@ -130,9 +134,10 @@ def compute_activity_counts(df):
     return op_df
 
 
-def compute_vector_magnitude(df: pd.DataFrame, fs: float=50) -> pd.DataFrame:
+def compute_vector_magnitude(df: pd.DataFrame, fs: float=30) -> pd.DataFrame:
     """Computes the vector magnitude from the IMU data.
     """
+    df = df.loc[:, ['ax', 'ay', 'az', 'gx', 'gy', 'gz']]
     df = resample(df, 50, 30)
     op_df = pd.DataFrame(index=df.index)
 
