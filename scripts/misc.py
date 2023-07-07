@@ -9,13 +9,29 @@ import pandas as pd
 from scipy import signal
 
 
+def computer_tilt_for_all_subjects(alldf: pd.DataFrame, accl_lbl: str, nwin: int) -> dict:
+    """
+    Computes the tilt angle for all subjects in the given dataframe.
+    """
+    return {
+        _subj: np.hstack([
+            compute_tilt(alldf.loc[(alldf.loc[:, 'subject'] == _subj) &
+                                   (alldf.loc[:, 'segment'] == seg), accl_lbl], nwin)
+            for seg in alldf.loc[alldf.loc[:, 'subject'] == _subj, 'segment'].unique()])
+        for _subj in np.unique(alldf.subject)
+    }
+
+
 def compute_tilt(accl_farm: np.array, nwin: int) -> np.array:
+    """
+    Computes the tilt angle from the accelerometer data.
+    """
     # Moving averaging using the Savitzky-Golay filter
-    af = signal.savgol_filter(accl_farm, window_length=nwin, polyorder=0,
-                              mode='constant')
-    af[af < -1] = -1
-    af[af > 1] = 1
-    return -np.rad2deg(np.arccos(af)) + 90
+    acclf = signal.savgol_filter(accl_farm, window_length=nwin, polyorder=0,
+                                 mode='constant')
+    acclf[acclf < -1] = -1
+    acclf[acclf > 1] = 1
+    return -np.rad2deg(np.arccos(acclf)) + 90
 
 
 def read_data(subject_type, base_path="../data/") -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -33,8 +49,35 @@ def read_data(subject_type, base_path="../data/") -> tuple[pd.DataFrame, pd.Data
         right = pd.read_csv(pathlib.Path(base_path, subject_type, "right.csv"),
                             parse_dates=['time'], index_col='time')
     else:
-        raise Exception(f"Invalid parameter: {subject_type}. Use 'control' or 'patient' instead.")
+        raise ValueError(f"Invalid parameter: {subject_type}. Use 'control' or 'patient' instead.")
     return left, right
+
+
+def assign_segments(df: pd.DataFrame, dur_th:float = 1, dT: float = 0.02) -> pd.DataFrame:
+    """
+    Assign a semgment column to the given dataframe, while removing segments
+    shorter than 'dur_th' seconds.
+    """
+    # Get semgent indices
+    _dtimes = np.array([pd.Timedelta(_dt).total_seconds()
+                        for _dt in np.diff(df.index.values)])
+    inx = np.hstack((0, np.where(_dtimes > dT)[0] + 1, len(df)))
+    seginx = list(zip(inx[0:-1], inx[1:]))
+
+    # Filter segments based on segment duration. Anything shorter than 5s is out.
+    seginx = [ix for ix in seginx
+            if pd.Timedelta(df.index[ix[1]-1] - df.index[ix[0]]).total_seconds() > dur_th]
+
+    # Create new dataframe without short segments
+    df = df.iloc[np.hstack([np.arange(ix[0], ix[1]) for ix in seginx])]
+
+    # Assign segment column
+    _segdf = pd.DataFrame(
+        {"segment": np.hstack([[i] * (ix[1] - ix[0]) for i, ix in enumerate(seginx)])},
+        index=df.index
+    )
+    
+    return pd.concat([df, _segdf], axis=1)
 
 
 def get_largest_continuous_segment_indices(data: pd.DataFrame, subject: int,

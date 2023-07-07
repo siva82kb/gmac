@@ -130,7 +130,9 @@ def compute_activity_counts(df):
     return op_df
 
 
-def compute_vector_magnitude(df):
+def compute_vector_magnitude(df: pd.DataFrame, fs: float=50) -> pd.DataFrame:
+    """Computes the vector magnitude from the IMU data.
+    """
     df = resample(df, 50, 30)
     op_df = pd.DataFrame(index=df.index)
 
@@ -140,7 +142,7 @@ def compute_vector_magnitude(df):
     g = np.array([0, 0, 1])
     ae = np.empty([len(acc), 3])
 
-    mg = Madgwick(frequency=30, beta=0.5)
+    mg = Madgwick(frequency=fs, beta=0.5)
     q = np.tile([1., 0., 0., 0.], (len(acc), 1))
 
     r = orientation.q2R(mg.updateIMU(q[0], gyr[0], acc[0]))
@@ -151,10 +153,10 @@ def compute_vector_magnitude(df):
         r = orientation.q2R(q[i])
         ae[i] = np.matmul(r, acc[i]) - g
 
-    op_df['ax'] = bandpass(np.nan_to_num(ae[:, 0]), fs=30)
-    op_df['ay'] = bandpass(np.nan_to_num(ae[:, 1]), fs=30)
-    op_df['az'] = bandpass(np.nan_to_num(ae[:, 2]), fs=30)
-    op_df = resample(op_df, 30, 10)
+    op_df['ax'] = bandpass(np.nan_to_num(ae[:, 0]), fs=fs)
+    op_df['ay'] = bandpass(np.nan_to_num(ae[:, 1]), fs=fs)
+    op_df['az'] = bandpass(np.nan_to_num(ae[:, 2]), fs=fs)
+    op_df = resample(op_df, fs, 10)
 
     op_df['ax'] = np.where(np.absolute(op_df['ax'].values) < 0.068, 0, op_df['ax'].values) / 0.01664
     op_df['ay'] = np.where(np.absolute(op_df['ay'].values) < 0.068, 0, op_df['ay'].values) / 0.01664
