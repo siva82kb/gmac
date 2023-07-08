@@ -87,12 +87,12 @@ def assign_segments(df: pd.DataFrame, dur_th:float = 1, dT: float = 0.02) -> pd.
     return pd.concat([df, _segdf], axis=1)
 
 
-def get_continuous_segments(df: pd.DataFrame) -> list[pd.DataFrame]:
+def get_continuous_segments(df: pd.DataFrame, tjump: float=1) -> list[pd.DataFrame]:
     # returns a list of continuous sections (as dataframes) from the original dataframe
 
     time_diff = np.array([pd.Timedelta(diff).total_seconds()
                           for diff in np.diff(df.index.values)])
-    inx = np.sort(np.append(np.where(time_diff > 60)[0], -1))
+    inx = np.sort(np.append(np.where(time_diff > tjump)[0], -1))
     dfs = [df.iloc[inx[i] + 1:inx[i + 1] + 1]
            if i + 1 < len(inx)
            else df.iloc[inx[-1] + 1:]
@@ -133,7 +133,7 @@ def compute_vector_magnitude(imudf: pd.DataFrame) -> pd.DataFrame:
     out_df['ay'] = np.where(np.absolute(out_df['ay'].values) < 0.068, 0, out_df['ay'].values) / 0.01664
     out_df['az'] = np.where(np.absolute(out_df['az'].values) < 0.068, 0, out_df['az'].values) / 0.01664
 
-    dfs = get_continuous_segments(out_df)
+    dfs = get_continuous_segments(out_df, tjump=1)
     dfs = [df.resample(str(1) + 'S').sum() for df in dfs]
     out_df = pd.concat(dfs)
     out_df.index.name = 'time'
@@ -167,6 +167,42 @@ def bandpass(x: np.array, fs: float=50, order: int=4) ->  np.array:
     return filtered
 
 
+def compute_accl_magnitude(accl: np.array, time: np.array, nfilt: int=5,
+                           causal: bool=True) -> pd.DataFrame:
+    """
+    Compute the magnitude of the accelerometer signal.
+    """
+    if causal:
+        sos = signal.butter(2, 1/(2*50), 'high', output='sos')
+        accl_filt = np.array([signal.sosfilt(sos, accl[:, 0]),
+                            signal.sosfilt(sos, accl[:, 1]),
+                            signal.sosfilt(sos, accl[:, 2])]).T
+    else:
+        b, a = signal.butter(2, 1/(2*50), 'high')
+        accl_filt = signal.filtfilt(b, a, accl, axis=0)
+    
+    # Zero low acceleration
+    amag_1 = np.linalg.norm(accl_filt, axis=1)
+    times = time.astype('datetime64[s]')
+    amag_1 = np.array([np.sum(amag_1[np.where(times == _ts)[0]])
+                       for _ts in np.unique(times)])
+    if causal:
+        # moving average filter
+        _input = np.append(np.ones(nfilt - 1) * amag_1[0], amag_1)
+        amag_df = pd.DataFrame(
+            np.convolve(_input, np.ones(nfilt), mode='valid') / nfilt,
+            columns=['mag'],
+            index=np.sort(np.unique(times))
+        )
+    else:
+        amag_df = pd.DataFrame(
+            signal.savgol_filter(amag_1, window_length=nfilt, polyorder=0,
+                                 mode='constant'),
+            columns=['mag'],
+            index=np.sort(np.unique(times))
+        )
+    amag_df.index.name = 'time'        
+    return amag_df
 
 
 # def get_largest_continuous_segment_indices(data: pd.DataFrame, subject: int,
