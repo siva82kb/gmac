@@ -175,13 +175,16 @@ def compute_accl_magnitude(accl: np.array, time: np.array, nfilt: int=5,
     if causal:
         sos = signal.butter(2, 1/(2*50), 'high', output='sos')
         accl_filt = np.array([signal.sosfilt(sos, accl[:, 0]),
-                            signal.sosfilt(sos, accl[:, 1]),
-                            signal.sosfilt(sos, accl[:, 2])]).T
+                              signal.sosfilt(sos, accl[:, 1]),
+                              signal.sosfilt(sos, accl[:, 2])]).T
     else:
         b, a = signal.butter(2, 1/(2*50), 'high')
         accl_filt = signal.filtfilt(b, a, accl, axis=0)
     
     # Zero low acceleration
+    deadband_threshold = 0.068
+    accl_filt[np.abs(accl_filt)<deadband_threshold] = 0
+    
     amag_1 = np.linalg.norm(accl_filt, axis=1)
     times = time.astype('datetime64[s]')
     amag_1 = np.array([np.sum(amag_1[np.where(times == _ts)[0]])
