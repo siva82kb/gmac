@@ -1,0 +1,38 @@
+
+np: np
+1      93.939394
+50      3.030303
+250     3.030303
+Name: count, dtype: float64
+fc: fc
+0.01    39.393939
+0.10    33.333333
+1.00    27.272727
+Name: count, dtype: float64
+nc: nc
+2    50.0
+4    50.0
+Name: count, dtype: float64
+deadband_th: deadband_th
+0.000    36.363636
+0.068    36.363636
+0.680    27.272727
+Name: count, dtype: float64
+nam: nam
+1      39.393939
+50     33.333333
+250    27.272727
+Name: count, dtype: float64
+p_thmin: p_thmin
+-30    100.0
+Name: count, dtype: float64
+p_thmax: p_thmax
+0    100.0
+Name: count, dtype: float64
+am_thmin: am_thmin
+0    100.0
+Name: count, dtype: float64
+am_thmax: am_thmax
+0    81.818182
+1    18.181818
+Name: count, dtype: float64
