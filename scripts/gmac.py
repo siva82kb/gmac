@@ -67,12 +67,19 @@ def estimate_gmac2(accl: np.array, accl_farm_inx: int, Fs: float, params: dict) 
                                  n_am=params["nam"])
     
     # Compute GMAC
-    _pout = np.zeros(len(pitch))
-    for i in range(1, len(_pout)):
-        if _pout[i-1] == 0:
-            _pout[i] = 1 * (pitch[i] >= params["p_th"])
-        else:
-            _pout[i] = 1 * (pitch[i] >= (params["p_th"] - params["p_th_band"]))
-    _amout = 1.0 * (accl_mag > params["am_th"])
+    _pout = detector_with_hystersis(pitch, params["p_th"], params["p_th_band"])
+    _amout = detector_with_hystersis(accl_mag, params["am_th"], params["am_th_band"])
     return _pout * _amout
 
+
+def detector_with_hystersis(x: np.array, th: float, th_band: float) -> np.array:
+    """
+    Implements a detector with hystersis.
+    """
+    y= np.zeros(len(x))
+    for i in range(1, len(y)):
+        if y[i-1] == 0:
+            y[i] = 1 * (x[i] > th)
+        else:
+            y[i] = 1 * (x[i] >= (th - th_band))
+    return y
