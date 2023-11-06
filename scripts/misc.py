@@ -208,6 +208,20 @@ def compute_accl_magnitude(accl: np.array, time: np.array, nfilt: int=5,
     return amag_df
 
 
+# Generate all possible combinations of parameters.
+def generate_param_combinations_am(param_ranges: dict) -> dict:
+    """
+    Generate all possible combinations of parameters.
+    """
+    for _fc in param_ranges["fc"]:
+        for _nc in param_ranges["nc"]:
+            for _nam in param_ranges["nam"]:
+                yield {
+                    "fc": _fc,
+                    "nc": int(_nc),
+                    "nam": int(_nam)
+                }
+
 # def get_largest_continuous_segment_indices(data: pd.DataFrame, subject: int,
 #                                            deltaT: np.timedelta64) -> tuple[int, int]:
 #     """
