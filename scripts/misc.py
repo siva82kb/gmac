@@ -222,6 +222,33 @@ def generate_param_combinations_am(param_ranges: dict) -> dict:
                     "nam": int(_nam)
                 }
 
+
+# Generate all possible combinations of parameters.
+def generate_param_combinations_gmac(param_ranges: dict) -> dict:
+    """
+    Generate all possible combinations of parameters.
+    """
+    for _np in param_ranges["np"]:
+        for _fc in param_ranges["fc"]:
+            for _nc in param_ranges["nc"]:
+                for _nam in param_ranges["nam"]:
+                    for _pth in param_ranges["p_th"]:
+                        for _pthb in param_ranges["p_th_band"]:
+                            for _amth in param_ranges["am_th"]:
+                                for _amthb in param_ranges["am_th_band"]:
+                                    yield {
+                                        "np": int(_np),
+                                        "fc": _fc,
+                                        "nc": int(_nc),
+                                        "nam": int(_nam),
+                                        "p_th": _pth,
+                                        "p_th_band": _pthb,
+                                        "am_th": _amth,
+                                        "am_th_band": _amthb
+                                    }
+
+
+
 # def get_largest_continuous_segment_indices(data: pd.DataFrame, subject: int,
 #                                            deltaT: np.timedelta64) -> tuple[int, int]:
 #     """

@@ -57,7 +57,7 @@ def estimate_gmac(accl: np.array, accl_farm_inx: int, Fs: float, params: dict) -
     return _pout * _amout
 
 
-def estimate_gmac2(accl: np.array, accl_farm_inx: int, Fs: float, params: dict) -> np.array:
+def estimate_gmac2(accl: np.array, accl_farm_inx: int, Fs: float, params: dict, full_output: bool = False) -> np.array:
     """
     Estimate GMAC for the given acceleration data and parameters.
     """
@@ -69,7 +69,7 @@ def estimate_gmac2(accl: np.array, accl_farm_inx: int, Fs: float, params: dict) 
     # Compute GMAC
     _pout = detector_with_hystersis(pitch, params["p_th"], params["p_th_band"])
     _amout = detector_with_hystersis(accl_mag, params["am_th"], params["am_th_band"])
-    return _pout * _amout
+    return (pitch, accl_mag, _pout * _amout) if full_output else (_pout * _amout) 
 
 
 def detector_with_hystersis(x: np.array, th: float, th_band: float) -> np.array:
