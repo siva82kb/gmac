@@ -248,6 +248,43 @@ def generate_param_combinations_gmac(param_ranges: dict) -> dict:
                                     }
 
 
+# Generate all possible combinations of parameters with enumeration.
+def generate_param_combinations_gmac_wenum(param_ranges: dict):
+    """
+    Generate all possible combinations of parameters.
+    """
+    for i1, _np in enumerate(param_ranges["np"]):
+        for i2, _fc in enumerate(param_ranges["fc"]):
+            for i3, _nc in enumerate(param_ranges["nc"]):
+                for i4, _nam in enumerate(param_ranges["nam"]):
+                    for i5, _pth in enumerate(param_ranges["p_th"]):
+                        for i6, _pthb in enumerate(param_ranges["p_th_band"]):
+                            for i7, _amth in enumerate(param_ranges["am_th"]):
+                                for i8, _amthb in enumerate(param_ranges["am_th_band"]):
+                                    yield (
+                                        {
+                                            "np": i1,
+                                            "fc": i2,
+                                            "nc": i3,
+                                            "nam": i4,
+                                            "p_th": i5,
+                                            "p_th_band": i6,
+                                            "am_th": i7,
+                                            "am_th_band": i8
+                                        }, 
+                                        {
+                                            "np": int(_np),
+                                            "fc": _fc,
+                                            "nc": int(_nc),
+                                            "nam": int(_nam),
+                                            "p_th": _pth,
+                                            "p_th_band": _pthb,
+                                            "am_th": _amth,
+                                            "am_th_band": _amthb
+                                        }
+                                    )
+
+
 
 # def get_largest_continuous_segment_indices(data: pd.DataFrame, subject: int,
 #                                            deltaT: np.timedelta64) -> tuple[int, int]:
